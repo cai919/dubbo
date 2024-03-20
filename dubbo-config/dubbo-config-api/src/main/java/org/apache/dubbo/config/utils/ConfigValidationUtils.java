@@ -217,6 +217,7 @@ public class ConfigValidationUtils {
                     for (URL url : urls) {
                         url = URLBuilder.from(url)
                             .addParameter(REGISTRY_KEY, url.getProtocol())
+                            // 默认设置为registry
                             .setProtocol(extractRegistryType(url))
                             .setScopeModel(interfaceConfig.getScopeModel())
                             .build();

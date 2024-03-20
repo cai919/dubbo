@@ -52,6 +52,7 @@ public class Transporters {
         } else {
             handler = new ChannelHandlerDispatcher(handlers);
         }
+        // 正常走Netty4Transporter，默认值配置的是netty，配置文件里netty也是走Netty4
         return getTransporter(url).bind(url, handler);
     }
 

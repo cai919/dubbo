@@ -97,6 +97,7 @@ public class DubboDeployApplicationListener implements ApplicationListener<Appli
     public void onApplicationEvent(ApplicationContextEvent event) {
         if (nullSafeEquals(applicationContext, event.getSource())) {
             if (event instanceof ContextRefreshedEvent) {
+                // 上下文refresh完成触发该方法
                 onContextRefreshedEvent((ContextRefreshedEvent) event);
             } else if (event instanceof ContextClosedEvent) {
                 onContextClosedEvent((ContextClosedEvent) event);
@@ -108,6 +109,7 @@ public class DubboDeployApplicationListener implements ApplicationListener<Appli
         ModuleDeployer deployer = moduleModel.getDeployer();
         Assert.notNull(deployer, "Module deployer is null");
         // start module
+        // 开始deployer
         Future future = deployer.start();
 
         // if the module does not start in background, await finish

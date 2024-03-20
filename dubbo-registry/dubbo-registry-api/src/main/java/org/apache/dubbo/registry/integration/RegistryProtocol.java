@@ -235,6 +235,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         overrideListeners.put(registryUrl, overrideSubscribeListener);
 
         providerUrl = overrideUrlWithConfig(providerUrl, overrideSubscribeListener);
+        // 导出
         //export invoker
         final ExporterChangeableWrapper<T> exporter = doLocalExport(originInvoker, providerUrl);
 
@@ -245,6 +246,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         // decide if we need to delay publish (provider itself and registry should both need to register)
         boolean register = providerUrl.getParameter(REGISTER_KEY, true) && registryUrl.getParameter(REGISTER_KEY, true);
         if (register) {
+            // 注册提供方地址到注册中心
             register(registry, registeredProviderUrl);
         }
 
@@ -256,6 +258,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         exporter.setSubscribeUrl(overrideSubscribeUrl);
 
         if (!registry.isServiceDiscovery()) {
+            // 订阅注册中心
             // Deprecated! Subscribe to override rules in 2.6.x or before.
             registry.subscribe(overrideSubscribeUrl, overrideSubscribeListener);
         }
@@ -291,6 +294,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
 
         return (ExporterChangeableWrapper<T>) bounds.computeIfAbsent(key, s -> {
             Invoker<?> invokerDelegate = new InvokerDelegate<>(originInvoker, providerUrl);
+            // 配置了dubbo协议，就会走DubboProtocol#export
             return new ExporterChangeableWrapper<>((Exporter<T>) protocol.export(invokerDelegate), originInvoker);
         });
     }

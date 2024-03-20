@@ -96,6 +96,7 @@ public class NettyServer extends AbstractServer {
      */
     @Override
     protected void doOpen() throws Throwable {
+        // netty的客户端
         bootstrap = new ServerBootstrap();
 
         bossGroup = createBossGroup();
@@ -105,7 +106,7 @@ public class NettyServer extends AbstractServer {
         channels = nettyServerHandler.getChannels();
 
         initServerBootstrap(nettyServerHandler);
-
+        // 最终执行netty的bind
         // bind
         ChannelFuture channelFuture = bootstrap.bind(getBindAddress());
         channelFuture.syncUninterruptibly();

@@ -128,7 +128,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
     public Future start() throws IllegalStateException {
         // initialize，maybe deadlock applicationDeployer lock & moduleDeployer lock
         applicationDeployer.initialize();
-
+        // 开始同步
         return startSync();
     }
 
@@ -146,7 +146,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
 
 
             initialize();
-
+            // 导出dubbo-service
             // export services
             exportServices();
 
@@ -311,6 +311,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
     }
 
     private void exportServices() {
+        // 从缓存中取出所有的ServiceBean
         for (ServiceConfigBase sc : configManager.getServices()) {
             exportServiceInternal(sc);
         }
@@ -329,6 +330,7 @@ public class DefaultModuleDeployer extends AbstractDeployer<ModuleModel> impleme
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
                     if (!sc.isExported()) {
+                        // 导出
                         sc.export();
                         exportedServices.add(sc);
                     }

@@ -230,6 +230,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 if (shouldDelay()) {
                     doDelayExport();
                 } else {
+                    // 直接导出
                     doExport();
                 }
             }
@@ -358,6 +359,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         if (StringUtils.isEmpty(path)) {
             path = interfaceName;
         }
+        // 导出多地址
         doExportUrls();
         exported();
     }
@@ -384,7 +386,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
         providerModel.setDestroyRunner(getDestroyRunner());
         repository.registerProvider(providerModel);
-
+        // 加载注册中心地址
         List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
 
         for (ProtocolConfig protocolConfig : protocols) {
@@ -396,6 +398,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                 // In case user specified path, register service one more time to map it to path.
                 repository.registerService(pathKey, interfaceClass);
             }
+            // 单个协议多个注册中心导出
             doExportUrlsFor1Protocol(protocolConfig, registryURLs);
         }
 
@@ -411,7 +414,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         serviceMetadata.getAttachments().putAll(map);
 
         URL url = buildUrl(protocolConfig, map);
-
+        // 单协议导出
         exportUrl(url, registryURLs);
     }
 
@@ -575,11 +578,13 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
             // export to local if the config is not remote (export to remote only when config is remote)
             if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
+                // 本地导出
                 exportLocal(url);
             }
 
             // export to remote if the config is not local (export to local only when config is local)
             if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
+                // 远程导出
                 url = exportRemote(url, registryURLs);
                 if (!isGeneric(generic) && !getScopeModel().isInternal()) {
                     MetadataUtils.publishServiceDefinition(url, providerModel.getServiceModel(), getApplicationModel());
@@ -620,7 +625,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
                         logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
                     }
                 }
-
+                //导出
                 doExportUrl(registryURL.putAttribute(EXPORT_KEY, url), true);
             }
 
@@ -637,12 +642,15 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
         return url;
     }
 
+    // 不同协议的导出都走这个方法
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void doExportUrl(URL url, boolean withMetaData) {
+        // 获取调用代理器
         Invoker<?> invoker = proxyFactory.getInvoker(ref, (Class) interfaceClass, url);
         if (withMetaData) {
             invoker = new DelegateProviderMetaDataInvoker(invoker, this);
         }
+        // 远程导出默认走registry协议，本地导出走injvm协议
         Exporter<?> exporter = protocolSPI.export(invoker);
         exporters.add(exporter);
     }
@@ -652,6 +660,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
      * always export injvm
      */
     private void exportLocal(URL url) {
+        // 协议换成injvm
         URL local = URLBuilder.from(url)
             .setProtocol(LOCAL_PROTOCOL)
             .setHost(LOCALHOST_VALUE)
