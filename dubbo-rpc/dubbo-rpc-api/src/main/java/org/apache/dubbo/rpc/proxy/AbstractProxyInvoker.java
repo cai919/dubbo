@@ -95,7 +95,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
                     originEntry = Profiler.setToBizProfiler(profiler);
                 }
             }
-
+            // 调用生成的代理类中的方法
             Object value = doInvoke(proxy, invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
 
             if (ProfilerSwitch.isEnableSimpleProfiler()) {
@@ -109,7 +109,7 @@ public abstract class AbstractProxyInvoker<T> implements Invoker<T> {
             if (originEntry != null) {
                 Profiler.setToBizProfiler(originEntry);
             }
-
+            // 构建Future，并包装成AppResponse
             CompletableFuture<Object> future = wrapWithFuture(value, invocation);
             CompletableFuture<AppResponse> appResponseFuture = future.handle((obj, t) -> {
                 AppResponse result = new AppResponse(invocation);

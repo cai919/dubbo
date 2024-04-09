@@ -190,6 +190,14 @@ public interface FilterChainBuilder {
 
         @Override
         public Result invoke(Invocation invocation) throws RpcException {
+            // FilterChainBuilder$CopyOfFilterChainNode
+            // ConsumerContextFilter
+            // FilterChainBuilder$CopyOfFilterChainNode
+            // FutureFilter
+            // FilterChainBuilder$CopyOfFilterChainNode
+            // MonitorFilter
+            // FilterChainBuilder$CopyOfFilterChainNode
+            // RouterSnapshotFilter
             Result asyncResult = filterInvoker.invoke(invocation);
             asyncResult.whenCompleteWithContext((r, t) -> {
                 RuntimeException filterRuntimeException = null;

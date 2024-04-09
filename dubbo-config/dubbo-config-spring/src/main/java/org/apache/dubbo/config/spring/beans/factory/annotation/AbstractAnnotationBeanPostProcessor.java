@@ -133,7 +133,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
         ReflectionUtils.doWithFields(beanClass, field -> {
 
             for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
-
+                // 拿到指定注解上的属性
                 AnnotationAttributes attributes = getAnnotationAttributes(field, annotationType, getEnvironment(), true, true);
 
                 if (attributes != null) {
@@ -178,7 +178,7 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
             }
 
             for (Class<? extends Annotation> annotationType : getAnnotationTypes()) {
-
+                // 获取方法上指定注解的属性
                 AnnotationAttributes attributes = getAnnotationAttributes(bridgedMethod, annotationType, getEnvironment(), true, true);
 
                 if (attributes != null && method.equals(ClassUtils.getMostSpecificMethod(method, beanClass))) {
@@ -198,7 +198,9 @@ public abstract class AbstractAnnotationBeanPostProcessor extends
     }
 
     private AbstractAnnotationBeanPostProcessor.AnnotatedInjectionMetadata buildAnnotatedMetadata(final Class<?> beanClass) {
+        // 处理字段上打了注解的信息
         Collection<AbstractAnnotationBeanPostProcessor.AnnotatedFieldElement> fieldElements = findFieldAnnotationMetadata(beanClass);
+        // 处理方法上打了注解的信息
         Collection<AbstractAnnotationBeanPostProcessor.AnnotatedMethodElement> methodElements = findAnnotatedMethodMetadata(beanClass);
         return new AnnotatedInjectionMetadata(beanClass, fieldElements, methodElements);
     }

@@ -36,6 +36,7 @@ public class ClassLoaderFilter implements Filter, BaseFilter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 设置classLoader
         ClassLoader stagedClassLoader = Thread.currentThread().getContextClassLoader();
         ClassLoader effectiveClassLoader;
         if (invocation.getServiceModel() != null) {

@@ -97,6 +97,8 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     @Override
     public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
+        // HeaderExchangeChannel
+        // 包装了channel的一些方法，并进行一些心跳检测、重新连接的操作
         return channel.request(request, timeout, executor);
     }
 

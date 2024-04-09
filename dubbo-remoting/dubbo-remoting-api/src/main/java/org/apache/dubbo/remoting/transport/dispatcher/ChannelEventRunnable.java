@@ -53,7 +53,9 @@ public class ChannelEventRunnable implements Runnable {
 
     @Override
     public void run() {
+        // 清理线程绑定的ThreadLocal中的数据
         InternalThreadLocal.removeAll();
+        // 接受请求，绝大部分都是接受请求，所以单独写
         if (state == ChannelState.RECEIVED) {
             try {
                 handler.received(channel, message);

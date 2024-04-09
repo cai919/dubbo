@@ -89,6 +89,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
     public void decode() throws Exception {
         if (!hasDecoded && channel != null && inputStream != null) {
             try {
+                // 从输入流中解析数据
                 decode(channel, inputStream);
             } catch (Throwable e) {
                 if (log.isWarnEnabled()) {
@@ -133,16 +134,20 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
         ClassLoader originClassLoader = Thread.currentThread().getContextClassLoader();
         try {
+            // 序列化安全校验
             if (Boolean.parseBoolean(System.getProperty(SERIALIZATION_SECURITY_CHECK_KEY, "true"))) {
                 CodecSupport.checkSerialization(frameworkModel.getServiceRepository(), path, version, serializationType);
             }
             Object[] args = DubboCodec.EMPTY_OBJECT_ARRAY;
             Class<?>[] pts = DubboCodec.EMPTY_CLASS_ARRAY;
+            // 描述有信息的话
             if (desc.length() > 0) {
 //                if (RpcUtils.isGenericCall(path, getMethodName()) || RpcUtils.isEcho(path, getMethodName())) {
 //                    pts = ReflectUtils.desc2classArray(desc);
 //                } else {
+                // 获取服务仓库
                 FrameworkServiceRepository repository = frameworkModel.getServiceRepository();
+                // 查询所有提供方model，通过path和version
                 List<ProviderModel> providerModels = repository.lookupExportedServicesWithoutGroup(keyWithoutGroup(path, version));
                 ServiceDescriptor serviceDescriptor = null;
                 if (CollectionUtils.isNotEmpty(providerModels)) {
@@ -154,6 +159,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                     }
                 }
                 if (serviceDescriptor == null) {
+                    // 提供方model里找不到服务则从框架中再找一遍
                     // Unable to find ProviderModel from Exported Services
                     for (ApplicationModel applicationModel : frameworkModel.getApplicationModels()) {
                         for (ModuleModel moduleModel : applicationModel.getModuleModels()) {
@@ -166,9 +172,12 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                 }
 
                 if (serviceDescriptor != null) {
+                    // 方法描述
                     MethodDescriptor methodDescriptor = serviceDescriptor.getMethod(getMethodName(), desc);
                     if (methodDescriptor != null) {
+                        // 方法参数类型数组
                         pts = methodDescriptor.getParameterClasses();
+                        // 设置返回类型数组
                         this.setReturnTypes(methodDescriptor.getReturnTypes());
 
                         // switch TCCL
@@ -176,6 +185,7 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                             if (providerModels.size() == 1) {
                                 Thread.currentThread().setContextClassLoader(providerModels.get(0).getClassLoader());
                             } else {
+                                // 找到可以加载参数的第一个classLoader
                                 // try all providerModels' classLoader can load pts, use the first one
                                 for (ProviderModel providerModel : providerModels) {
                                     ClassLoader classLoader = providerModel.getClassLoader();
@@ -203,17 +213,19 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
                     if (!RpcUtils.isGenericCall(desc, getMethodName()) && !RpcUtils.isEcho(desc, getMethodName())) {
                         throw new IllegalArgumentException("Service not found:" + path + ", " + getMethodName());
                     }
+                    // 从描述中获取参数类型数组
                     pts = ReflectUtils.desc2classArray(desc);
                 }
 //                }
-
+                // 设置参数
                 args = new Object[pts.length];
                 for (int i = 0; i < args.length; i++) {
                     args[i] = in.readObject(pts[i]);
                 }
             }
+            // 设置请求参数类型
             setParameterTypes(pts);
-
+            // 设置附件信息
             Map<String, Object> map = in.readAttachments();
             if (CollectionUtils.isNotEmptyMap(map)) {
                 addObjectAttachments(map);
@@ -221,10 +233,12 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
 
             //decode argument ,may be callback
             for (int i = 0; i < args.length; i++) {
+                // 解析请求参数
                 args[i] = callbackServiceCodec.decodeInvocationArgument(channel, this, pts, i, args[i]);
             }
-
+            // 设置参数
             setArguments(args);
+            // 构建目标服务key
             String targetServiceName = buildKey(getAttachment(PATH_KEY),
                 getAttachment(GROUP_KEY),
                 getAttachment(VERSION_KEY));

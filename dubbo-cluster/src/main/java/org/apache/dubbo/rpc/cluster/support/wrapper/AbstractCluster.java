@@ -79,6 +79,7 @@ public abstract class AbstractCluster implements Cluster {
             if (CollectionUtils.isEmpty(builders)) {
                 filterInvoker = invoker;
             } else {
+                // 这里做了过滤器的层层包装，把ClusterInvoker包了起来
                 ClusterInvoker<T> tmpInvoker = invoker;
                 for (FilterChainBuilder builder : builders) {
                     tmpInvoker = builder.buildClusterInvokerChain(tmpInvoker, REFERENCE_FILTER_KEY, CommonConstants.CONSUMER);
@@ -89,6 +90,7 @@ public abstract class AbstractCluster implements Cluster {
 
         @Override
         public Result invoke(Invocation invocation) throws RpcException {
+            //FilterChainBuilder$ClusterCallbackRegistrationInvoker
             return filterInvoker.invoke(invocation);
         }
 

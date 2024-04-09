@@ -34,7 +34,9 @@ public class InvocationUtil {
     private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
 
     public static Object invoke(Invoker<?> invoker, RpcInvocation rpcInvocation) throws Throwable {
+        // consumer://10.251.1.1/demo.HelloService?application=consumer&background=false&dubbo=2.0.2&interface=demo.HelloService&methods=sayHello,getName,getDefaultName&pid=51259&qos.enable=false&register.ip=10.251.1.1&release=3.0.16-SNAPSHOT&side=consumer&sticky=false&timestamp=1711436602011
         URL url = invoker.getUrl();
+        // 提供方key
         String serviceKey = url.getServiceKey();
         rpcInvocation.setTargetServiceUniqueName(serviceKey);
 
@@ -42,6 +44,7 @@ public class InvocationUtil {
         RpcServiceContext.getServiceContext().setConsumerUrl(url);
 
         if (ProfilerSwitch.isEnableSimpleProfiler()) {
+            // 调用链耗时统计工具
             ProfilerEntry parentProfiler = Profiler.getBizProfiler();
             ProfilerEntry bizProfiler;
             if (parentProfiler != null) {
@@ -52,6 +55,7 @@ public class InvocationUtil {
             }
             rpcInvocation.put(Profiler.PROFILER_KEY, bizProfiler);
             try {
+                // invoke走MigrationInvoker.invoke()，结果重新包装
                 return invoker.invoke(rpcInvocation).recreate();
             } finally {
                 Profiler.release(bizProfiler);

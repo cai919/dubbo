@@ -41,13 +41,14 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
         }
 
         if (message instanceof Request) {
+            // 数据解析成RpcInvocation
             decode(((Request) message).getData());
         }
 
         if (message instanceof Response) {
             decode(((Response) message).getResult());
         }
-
+        // HeaderExchangerHandler
         handler.received(channel, message);
     }
 
@@ -57,6 +58,7 @@ public class DecodeHandler extends AbstractChannelHandlerDelegate {
         }
 
         try {
+            // DecodeableRpcInvocation等
             ((Decodeable) message).decode();
             if (log.isDebugEnabled()) {
                 log.debug("Decode decodeable message " + message.getClass().getName());

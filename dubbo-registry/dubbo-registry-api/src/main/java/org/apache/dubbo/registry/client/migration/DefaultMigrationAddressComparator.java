@@ -40,23 +40,25 @@ public class DefaultMigrationAddressComparator implements MigrationAddressCompar
 
     private Map<String, Map<String, Integer>> serviceMigrationData = new ConcurrentHashMap<>();
 
+    // 判断是否走应用级invoker
     @Override
     public <T> boolean shouldMigrate(ClusterInvoker<T> newInvoker, ClusterInvoker<T> oldInvoker, MigrationRule rule) {
         Map<String, Integer> migrationData = serviceMigrationData.computeIfAbsent(oldInvoker.getUrl().getDisplayServiceKey(), _k -> new ConcurrentHashMap<>());
-
+        // 新invoker为空 则直接走接口级
         if (!newInvoker.hasProxyInvokers()) {
             migrationData.put(OLD_ADDRESS_SIZE, getAddressSize(oldInvoker));
             migrationData.put(NEW_ADDRESS_SIZE, -1);
             logger.info("No " + getInvokerType(newInvoker) + " address available, stop compare.");
             return false;
         }
+        // 老invoker为空，则直接走应用级
         if (!oldInvoker.hasProxyInvokers()) {
             migrationData.put(OLD_ADDRESS_SIZE, -1);
             migrationData.put(NEW_ADDRESS_SIZE, getAddressSize(newInvoker));
             logger.info("No " + getInvokerType(oldInvoker) + " address available, stop compare.");
             return true;
         }
-
+        // 都不为空开始判断比例，如果不配置的化阈值默认为0，则只要应用级有一个invoker则直接走应用级
         int newAddressSize = getAddressSize(newInvoker);
         int oldAddressSize = getAddressSize(oldInvoker);
 
@@ -85,7 +87,7 @@ public class DefaultMigrationAddressComparator implements MigrationAddressCompar
         if (newAddressSize == 0 && oldAddressSize == 0) {
             return false;
         }
-
+        // 如果（应用级invokerSize/接口级invokerSize）的比例大于threshold则比较器返回true
         if (((float) newAddressSize / (float) oldAddressSize) >= threshold) {
             return true;
         }

@@ -49,6 +49,7 @@ public class ClassLoaderCallbackFilter implements Filter, BaseFilter.Listener {
     }
 
     private void setClassLoader(Invoker<?> invoker, Invocation invocation) {
+        // 为回调设置classLoader
         ClassLoader workingClassLoader = (ClassLoader) invocation.get(WORKING_CLASSLOADER_KEY);
         if (workingClassLoader != null) {
             Thread.currentThread().setContextClassLoader(workingClassLoader);

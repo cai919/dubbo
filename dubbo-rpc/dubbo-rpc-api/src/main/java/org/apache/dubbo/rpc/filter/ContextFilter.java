@@ -82,6 +82,7 @@ public class ContextFilter implements Filter, Filter.Listener {
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         Map<String, Object> attachments = invocation.getObjectAttachments();
         if (attachments != null) {
+            // copy 已加载的key
             Map<String, Object> newAttach = new HashMap<>(attachments.size());
             for (Map.Entry<String, Object> entry : attachments.entrySet()) {
                 String key = entry.getKey();
@@ -98,20 +99,20 @@ public class ContextFilter implements Filter, Filter.Listener {
         RpcContext context = RpcContext.getServerAttachment();
 //                .setAttachments(attachments)  // merged from dubbox
         context.setLocalAddress(invoker.getUrl().getHost(), invoker.getUrl().getPort());
-
+        // 服务端应用名称
         String remoteApplication = invocation.getAttachment(REMOTE_APPLICATION_KEY);
         if (StringUtils.isNotEmpty(remoteApplication)) {
             RpcContext.getServiceContext().setRemoteApplicationName(remoteApplication);
         } else {
             RpcContext.getServiceContext().setRemoteApplicationName(context.getAttachment(REMOTE_APPLICATION_KEY));
         }
-
+        // 获取超时时间
         long timeout = RpcUtils.getTimeout(invocation, -1);
         if (timeout != -1) {
             // pass to next hop
             RpcContext.getClientAttachment().setObjectAttachment(TIME_COUNTDOWN_KEY, TimeoutCountDown.newCountDown(timeout, TimeUnit.MILLISECONDS));
         }
-
+        // 服务端上下文设置附件信息
         // merged from dubbox
         // we may already add some attachments into RpcContext before this filter (e.g. in rest protocol)
         if (attachments != null) {

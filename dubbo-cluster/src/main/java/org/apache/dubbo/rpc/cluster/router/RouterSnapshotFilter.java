@@ -42,14 +42,16 @@ public class RouterSnapshotFilter implements ClusterFilter, BaseFilter.Listener 
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 路由、快照的开关是否打开
         if (!switcher.isEnable()) {
+            // FailoverClusterInvoker 上层 AbstractClusterInvoker.invoke
             return invoker.invoke(invocation);
         }
-
+        // 是否日志级别不是info，其他模式的不走快照
         if (!logger.isInfoEnabled()) {
             return invoker.invoke(invocation);
         }
-
+        // 支持的服务列表不包含该服务
         if (!switcher.isEnable(invocation.getServiceModel().getServiceKey())) {
             return invoker.invoke(invocation);
         }

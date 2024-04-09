@@ -90,6 +90,8 @@ final class ReferenceCountExchangeClient implements ExchangeClient {
 
     @Override
     public CompletableFuture<Object> request(Object request, int timeout, ExecutorService executor) throws RemotingException {
+        // HeaderExchangeClient
+        // 该client是为了包一层，提供了一系列跟refer相关的方法
         return client.request(request, timeout, executor);
     }
 

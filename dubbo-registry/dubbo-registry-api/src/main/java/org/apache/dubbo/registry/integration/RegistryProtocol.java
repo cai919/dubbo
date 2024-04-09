@@ -669,6 +669,7 @@ public class RegistryProtocol implements Protocol, ScopeModelAware {
         }
 
         public Invoker<T> getInvoker() {
+            // 委派的获取实际调用类
             if (invoker instanceof InvokerDelegate) {
                 return ((InvokerDelegate<T>) invoker).getInvoker();
             } else {

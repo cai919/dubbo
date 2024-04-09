@@ -191,13 +191,16 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
     @Override
     public void send(Object message, boolean sent) throws RemotingException {
         if (needReconnect && !isConnected()) {
+            // 设置通道并连接
             connect();
         }
+        // 获取通道
         Channel channel = getChannel();
         //TODO Can the value returned by getChannel() be null? need improvement.
         if (channel == null || !channel.isConnected()) {
             throw new RemotingException(this, "message can not send, because channel is closed . url:" + getUrl());
         }
+        // NettyChannel
         channel.send(message, sent);
     }
 
@@ -214,7 +217,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
                     + NetUtils.getLocalHost() + " using dubbo version " + Version.getVersion() + ", cause: client status is closed or closing.");
                 return;
             }
-
+            // NettyClient
             doConnect();
 
             if (!isConnected()) {

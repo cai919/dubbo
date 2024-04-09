@@ -76,6 +76,7 @@ public class TraceFilter implements Filter {
         long start = System.currentTimeMillis();
         Result result = invoker.invoke(invocation);
         long end = System.currentTimeMillis();
+        // 发送跟踪信息
         if (TRACERS.size() > 0) {
             String key = invoker.getInterface().getName() + "." + invocation.getMethodName();
             Set<Channel> channels = TRACERS.get(key);

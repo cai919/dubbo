@@ -237,14 +237,18 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         return false;
     }
 
+    // refer的的时候会执行这个方法
     @Override
     public void migrateToApplicationFirstInvoker(MigrationRule newRule) {
         CountDownLatch latch = new CountDownLatch(0);
+        // 刷新接口调用invoker
         refreshInterfaceInvoker(latch);
+        // 刷新服务发现invoker
         refreshServiceDiscoveryInvoker(latch);
 
         // directly calculate preferred invoker, will not wait until address notify
         // calculation will re-occurred when address notify later
+        // 计算使用哪个invoker
         calcPreferredInvoker(newRule);
     }
 
@@ -270,13 +274,26 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // 在 Dubbo 3 之前地址注册模型是以接口级粒度注册到注册中心的，而 Dubbo 3 全新的应用级注册模型注册到注册中心的粒度是应用级的。
+        // 从注册中心的实现上来说是几乎不一样的，这导致了对于从接口级注册模型获取到的 invokers 是无法与从应用级注册模型获取到的 invokers 进行合并的。
+        // 为了帮助用户从接口级往应用级迁移，Dubbo 3 设计了 Migration 机制，基于三个状态的切换实现实际调用中地址模型的切换。
+        // 当前共存在三种状态，FORCE_INTERFACE（强制接口级），APPLICATION_FIRST（应用级优先）、FORCE_APPLICATION（强制应用级）。
+        // FORCE_INTERFACE：只启用兼容模式下接口级服务发现的注册中心逻辑，调用流量 100% 走原有流程
+        // APPLICATION_FIRST：开启接口级、应用级双订阅，运行时根据阈值和灰度流量比例动态决定调用流量走向
+        // FORCE_APPLICATION：只启用新模式下应用级服务发现的注册中心逻辑，调用流量 100% 走应用级订阅的地址
+        // currentAvailableInvoker如果单前有有效的invoker不为空说明已经初始化过了
         if (currentAvailableInvoker != null) {
+            // 应用优先
             if (step == APPLICATION_FIRST) {
+                // 随机值决策（0-100判断是否大于灰度值）
                 // call ratio calculation based on random value
                 if (promotion < 100 && ThreadLocalRandom.current().nextDouble(100) > promotion) {
                     // fall back to interface mode
+                    // 接口级别调用
                     return invoker.invoke(invocation);
                 }
+                // 否则走应用调用
+                // 走MockClusterInvoker
                 // check if invoker available for each time
                 return decideInvoker().invoke(invocation);
             }
@@ -298,8 +315,11 @@ public class MigrationInvoker<T> implements MigrationClusterInvoker<T> {
         return currentAvailableInvoker.invoke(invocation);
     }
 
+    // 应用优先的情况下，决策一下要走哪个invoker
     private ClusterInvoker<T> decideInvoker() {
+        // 判断当前是否为服务发现invoker
         if (currentAvailableInvoker == serviceDiscoveryInvoker) {
+            // 判断是否有效
             if (checkInvokerAvailable(serviceDiscoveryInvoker)) {
                 return serviceDiscoveryInvoker;
             }

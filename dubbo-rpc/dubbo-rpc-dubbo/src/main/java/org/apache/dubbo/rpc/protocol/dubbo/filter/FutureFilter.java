@@ -51,6 +51,7 @@ public class FutureFilter implements ClusterFilter, ClusterFilter.Listener {
         return invoker.invoke(invocation);
     }
 
+    // 返回的钩子函数的调用
     @Override
     public void onResponse(Result result, Invoker<?> invoker, Invocation invocation) {
         if (result.hasException()) {
@@ -85,10 +86,13 @@ public class FutureFilter implements ClusterFilter, ClusterFilter.Listener {
 
         Object[] params = invocation.getArguments();
         try {
+            // 执行前置函数
             onInvokeMethod.invoke(onInvokeInst, params);
         } catch (InvocationTargetException e) {
+            // 报错就直接执行异常钩子函数
             fireThrowCallback(invoker, invocation, e.getTargetException());
         } catch (Throwable e) {
+            // 报错就直接执行异常钩子函数
             fireThrowCallback(invoker, invocation, e);
         }
     }

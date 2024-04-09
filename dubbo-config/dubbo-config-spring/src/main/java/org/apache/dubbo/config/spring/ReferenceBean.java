@@ -350,6 +350,7 @@ public class ReferenceBean<T> implements FactoryBean<T>,
 
         @Override
         protected Object createObject() throws Exception {
+            System.out.println("这里什么时候调用的");
             return getCallProxy();
         }
 

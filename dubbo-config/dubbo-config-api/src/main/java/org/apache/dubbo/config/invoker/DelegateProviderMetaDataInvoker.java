@@ -52,6 +52,7 @@ public class DelegateProviderMetaDataInvoker<T> implements Invoker {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // 包了层metadata
         return invoker.invoke(invocation);
     }
 

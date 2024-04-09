@@ -41,6 +41,7 @@ public class ProfilerServerFilter implements Filter, BaseFilter.Listener {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
+        // 分析使用情况
         if (ProfilerSwitch.isEnableSimpleProfiler()) {
             ProfilerEntry bizProfiler;
             Object localInvokeProfiler = invocation.get(Profiler.PROFILER_KEY);

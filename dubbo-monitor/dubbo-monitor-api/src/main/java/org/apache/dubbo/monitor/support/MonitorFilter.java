@@ -93,6 +93,7 @@ public class MonitorFilter implements Filter, Filter.Listener {
             invocation.put(MONITOR_FILTER_START_TIME, System.currentTimeMillis());
             invocation.put(MONITOR_REMOTE_HOST_STORE, RpcContext.getServiceContext().getRemoteHost());
             // count up
+            // 方法调用次数设置，收集时间
             getConcurrent(invoker, invocation).incrementAndGet();
         }
         // proceed invocation chain

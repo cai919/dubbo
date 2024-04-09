@@ -45,6 +45,7 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
         }
         this.invoker = invoker;
         this.listeners = listeners;
+        // refer的时候触发监听器的执行
         if (CollectionUtils.isNotEmpty(listeners)) {
             for (InvokerListener listener : listeners) {
                 if (listener != null) {
@@ -75,6 +76,8 @@ public class ListenerInvokerWrapper<T> implements Invoker<T> {
 
     @Override
     public Result invoke(Invocation invocation) throws RpcException {
+        // DubboInvoker，先走AbstractInvoker中的invoke方法
+        // 不对invoker方法增强
         return invoker.invoke(invocation);
     }
 

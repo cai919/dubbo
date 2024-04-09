@@ -237,6 +237,7 @@ public class RpcUtils {
     }
 
     public static long getTimeout(Invocation invocation, long defaultTimeout) {
+        // 从请求里拿
         long timeout = defaultTimeout;
         Object genericTimeout = invocation.getObjectAttachmentWithoutConvert(TIMEOUT_ATTACHMENT_KEY);
         if(genericTimeout == null) {

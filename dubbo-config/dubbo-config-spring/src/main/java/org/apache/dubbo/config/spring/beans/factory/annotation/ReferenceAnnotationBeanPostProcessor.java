@@ -119,6 +119,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
      * {@link DubboReference @DubboReference} has been supported since 2.7.7
      */
     public ReferenceAnnotationBeanPostProcessor() {
+        // 设置默认引用的注解
         super(DubboReference.class, Reference.class, com.alibaba.dubbo.config.annotation.Reference.class);
     }
 
@@ -145,8 +146,10 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
                 beanType = beanFactory.getType(beanName);
             }
             if (beanType != null) {
+                // 处理方法或者属性上打了相关注解的方法
                 AnnotatedInjectionMetadata metadata = findInjectionMetadata(beanName, beanType, null);
                 try {
+                    // 准备要注入的数据
                     prepareInjection(metadata);
                 } catch (BeansException e) {
                     throw e;
@@ -169,6 +172,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         }
 
         try {
+            // 推送dubbo配置初始化的事件
             // this is an early event, it will be notified at org.springframework.context.support.AbstractApplicationContext.registerListeners()
             applicationContext.publishEvent(new DubboConfigInitEvent(applicationContext));
         } catch (Exception e) {
@@ -330,14 +334,17 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
     }
 
     protected void prepareInjection(AnnotatedInjectionMetadata metadata) throws BeansException {
+        // 两个集合如果是空的就无需注入了
         try {
             //find and register bean definition for @DubboReference/@Reference
             for (AnnotatedFieldElement fieldElement : metadata.getFieldElements()) {
+                // 如果实例不为空，说明已经注入过了，无需注入
                 if (fieldElement.injectedObject != null) {
                     continue;
                 }
                 Class<?> injectedType = fieldElement.field.getType();
                 AnnotationAttributes attributes = fieldElement.attributes;
+                // 构建ReferenceBeanDefinition，注册到容器中并缓存起来
                 String referenceBeanName = registerReferenceBean(fieldElement.getPropertyName(), injectedType, attributes, fieldElement.field);
 
                 //associate fieldElement and reference bean
@@ -347,11 +354,13 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
             }
 
             for (AnnotatedMethodElement methodElement : metadata.getMethodElements()) {
+                // 如果实例不为空，说明已经注入过了，无需注入
                 if (methodElement.injectedObject != null) {
                     continue;
                 }
                 Class<?> injectedType = methodElement.getInjectedType();
                 AnnotationAttributes attributes = methodElement.attributes;
+                // 构建ReferenceBeanDefinition，注册到容器中并缓存起来
                 String referenceBeanName = registerReferenceBean(methodElement.getPropertyName(), injectedType, attributes, methodElement.method);
 
                 //associate methodElement and reference bean
@@ -396,7 +405,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
                 return referenceBeanName;
             }
         }
-
+        // 判断是否已存在
         //check bean definition
         if (beanDefinitionRegistry.containsBeanDefinition(referenceBeanName)) {
             BeanDefinition prevBeanDefinition = beanDefinitionRegistry.getBeanDefinition(referenceBeanName);
@@ -456,7 +465,7 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
         Class interfaceClass = injectedType;
 
         // TODO Only register one reference bean for same (group, interface, version)
-
+        // 构建ReferenceBeanDefinition
         // Register the reference bean definition to the beanFactory
         RootBeanDefinition beanDefinition = new RootBeanDefinition();
         beanDefinition.setBeanClassName(ReferenceBean.class.getName());
@@ -475,8 +484,9 @@ public class ReferenceAnnotationBeanPostProcessor extends AbstractAnnotationBean
 
         // signal object type since Spring 5.2
         beanDefinition.setAttribute(Constants.OBJECT_TYPE_ATTRIBUTE, interfaceClass);
-
+        // 注册到容器中
         beanDefinitionRegistry.registerBeanDefinition(referenceBeanName, beanDefinition);
+        // 设置到ReferenceBeanManager的缓存中
         referenceBeanManager.registerReferenceKeyAndBeanName(referenceKey, referenceBeanName);
         logger.info("Register dubbo reference bean: " + referenceBeanName + " = " + referenceKey + " at " + member);
         return referenceBeanName;

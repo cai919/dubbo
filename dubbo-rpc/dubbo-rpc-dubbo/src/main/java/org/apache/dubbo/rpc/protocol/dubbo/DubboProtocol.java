@@ -124,10 +124,12 @@ public class DubboProtocol extends AbstractProtocol {
             if (invoker.getUrl().getServiceModel() != null) {
                 Thread.currentThread().setContextClassLoader(invoker.getUrl().getServiceModel().getClassLoader());
             }
+            // 判断是否是回调
             // need to consider backward-compatibility if it's a callback
             if (Boolean.TRUE.toString().equals(inv.getObjectAttachmentWithoutConvert(IS_CALLBACK_SERVICE_INVOKE))) {
                 String methodsStr = invoker.getUrl().getParameters().get("methods");
                 boolean hasMethod = false;
+                // 判断invoker中有没有回调的方法
                 if (methodsStr == null || !methodsStr.contains(",")) {
                     hasMethod = inv.getMethodName().equals(methodsStr);
                 } else {
@@ -262,11 +264,13 @@ public class DubboProtocol extends AbstractProtocol {
 
         //if it's stub service on client side(after enable stubevent, usually is set up onconnect or ondisconnect method)
         isStubServiceInvoke = Boolean.TRUE.toString().equals(inv.getObjectAttachmentWithoutConvert(STUB_EVENT_KEY));
+        // 本地存根的调用服务
         if (isStubServiceInvoke) {
             //when a stub service export to local, it usually can't be exposed to port
             port = 0;
         }
 
+        // 客户端callback服务的调用并且不是调用本地存梗服务 特殊设置path
         // if it's callback service on client side
         isCallBackServiceInvoke = isClientSide(channel) && !isStubServiceInvoke;
         if (isCallBackServiceInvoke) {
@@ -274,6 +278,7 @@ public class DubboProtocol extends AbstractProtocol {
             inv.setObjectAttachment(IS_CALLBACK_SERVICE_INVOKE, Boolean.TRUE.toString());
         }
 
+        // 这几个字段作为key从exporterMap中找到对应可执行的exporter
         String serviceKey = serviceKey(
             port,
             path,

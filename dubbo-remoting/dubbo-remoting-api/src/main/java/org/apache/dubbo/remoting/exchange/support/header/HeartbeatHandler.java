@@ -63,12 +63,16 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
 
     @Override
     public void received(Channel channel, Object message) throws RemotingException {
+        // 设置读取的时间
         setReadTimestamp(channel);
+        // 判断是不是心跳检测的请求
         if (isHeartbeatRequest(message)) {
             Request req = (Request) message;
+            // 是不是双向的
             if (req.isTwoWay()) {
                 Response res = new Response(req.getId(), req.getVersion());
                 res.setEvent(HEARTBEAT_EVENT);
+                // 响应回去
                 channel.send(res);
                 if (logger.isDebugEnabled()) {
                     int heartbeat = channel.getUrl().getParameter(Constants.HEARTBEAT_KEY, 0);
@@ -77,14 +81,17 @@ public class HeartbeatHandler extends AbstractChannelHandlerDelegate {
                         + (heartbeat > 0 ? ": " + heartbeat + "ms" : ""));
                 }
             }
+            // 不是双向的结束
             return;
         }
+        // 是不是心跳检测的响应
         if (isHeartbeatResponse(message)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Receive heartbeat response in thread " + Thread.currentThread().getName());
             }
             return;
         }
+        // 其他情况继续往下走，AllChannelHandler
         handler.received(channel, message);
     }
 

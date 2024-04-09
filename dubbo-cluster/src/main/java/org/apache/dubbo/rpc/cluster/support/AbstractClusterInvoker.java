@@ -320,6 +320,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 
     @Override
     public Result invoke(final Invocation invocation) throws RpcException {
+        // 判断集群是否已销毁
         checkWhetherDestroyed();
 
         // binding attachments into invocation.
@@ -329,14 +330,16 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
 //        }
 
         InvocationProfilerUtils.enterDetailProfiler(invocation, () -> "Router route.");
+        // 查询invokes
         List<Invoker<T>> invokers = list(invocation);
         InvocationProfilerUtils.releaseDetailProfiler(invocation);
-
+        // 获取负载均衡策略
         LoadBalance loadbalance = initLoadBalance(invokers, invocation);
         RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
 
         InvocationProfilerUtils.enterDetailProfiler(invocation, () -> "Cluster " + this.getClass().getName() + " invoke.");
         try {
+            // 执行子类中的doInvoke，FailoverClusterInvoker
             return doInvoke(invocation, invokers, loadbalance);
         } finally {
             InvocationProfilerUtils.releaseDetailProfiler(invocation);
@@ -375,6 +378,7 @@ public abstract class AbstractClusterInvoker<T> implements ClusterInvoker<T> {
             if (ProfilerSwitch.isEnableSimpleProfiler()) {
                 InvocationProfilerUtils.enterProfiler(invocation, "Invoker invoke. Target Address: " + invoker.getUrl().getAddress());
             }
+            // ListenerInvokerWrapper
             result = invoker.invoke(invocation);
         } finally {
             clearContext(invoker);

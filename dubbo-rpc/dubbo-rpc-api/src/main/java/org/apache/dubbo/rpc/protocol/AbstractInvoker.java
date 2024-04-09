@@ -177,10 +177,10 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
 
         // prepare rpc invocation
         prepareInvocation(invocation);
-
+        // 调用并返回一个异步结果类
         // do invoke rpc invocation and return async result
         AsyncRpcResult asyncResult = doInvokeAndReturn(invocation);
-
+        // 若果需要同步，则等待
         // wait rpc result if sync
         waitForResultIfSync(asyncResult, invocation);
 
@@ -218,6 +218,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     private AsyncRpcResult doInvokeAndReturn(RpcInvocation invocation) {
         AsyncRpcResult asyncResult;
         try {
+            // DubboInvoker
             asyncResult = (AsyncRpcResult) doInvoke(invocation);
         } catch (InvocationTargetException e) {
             Throwable te = e.getTargetException();
@@ -231,6 +232,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
                 asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
             }
         } catch (RpcException e) {
+            // 业务异常直接返回了，其他异常直接抛出去，执行重试
             // if biz exception
             if (e.isBiz()) {
                 asyncResult = AsyncRpcResult.newDefaultAsyncResult(null, e, invocation);
@@ -250,6 +252,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
     }
 
     private void waitForResultIfSync(AsyncRpcResult asyncResult, RpcInvocation invocation) {
+        // 不是同步的
         if (InvokeMode.SYNC != invocation.getInvokeMode()) {
             return;
         }
@@ -259,7 +262,9 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
              * must call {@link java.util.concurrent.CompletableFuture#get(long, TimeUnit)} because
              * {@link java.util.concurrent.CompletableFuture#get()} was proved to have serious performance drop.
              */
+            // 获取超时时间
             Object timeout = invocation.getObjectAttachmentWithoutConvert(TIMEOUT_KEY);
+            // 开始等待
             if (timeout instanceof Integer) {
                 asyncResult.get((Integer) timeout, TimeUnit.MILLISECONDS);
             } else {
@@ -267,6 +272,7 @@ public abstract class AbstractInvoker<T> implements Invoker<T> {
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            // 超时了，抛出去看能不能重试
             throw new RpcException("Interrupted unexpectedly while waiting for remote result to return! method: " +
                 invocation.getMethodName() + ", provider: " + getUrl() + ", cause: " + e.getMessage(), e);
         } catch (ExecutionException e) {

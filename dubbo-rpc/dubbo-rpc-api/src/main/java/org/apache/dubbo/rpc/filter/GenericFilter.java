@@ -72,6 +72,7 @@ public class GenericFilter implements Filter, Filter.Listener, ScopeModelAware {
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation inv) throws RpcException {
+        // 反序列化
         if ((inv.getMethodName().equals($INVOKE) || inv.getMethodName().equals($INVOKE_ASYNC))
             && inv.getArguments() != null
             && inv.getArguments().length == 3

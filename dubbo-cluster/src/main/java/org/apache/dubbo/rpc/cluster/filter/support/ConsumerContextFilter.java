@@ -62,6 +62,7 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
     public Result invoke(Invoker<?> invoker, Invocation invocation) throws RpcException {
         RpcContext.RestoreServiceContext originServiceContext = RpcContext.storeServiceContext();
         try {
+            // 本次请求的上下文中设置信息
             RpcContext.getServiceContext()
                 .setInvoker(invoker)
                 .setInvocation(invocation)
@@ -72,7 +73,7 @@ public class ConsumerContextFilter implements ClusterFilter, ClusterFilter.Liste
             if (invocation instanceof RpcInvocation) {
                 ((RpcInvocation) invocation).setInvoker(invoker);
             }
-
+            // 钩子，替换Server
             if (CollectionUtils.isNotEmpty(supportedSelectors)) {
                 for (PenetrateAttachmentSelector supportedSelector : supportedSelectors) {
                     Map<String, Object> selected = supportedSelector.select();
